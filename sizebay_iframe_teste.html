@@ -3,45 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>SizeBay Medidas</title>
-
+  <title>SizeBay Medidas - Provador Virtual</title>
   <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-      background: #111;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 120px;
+    * {
       box-sizing: border-box;
     }
 
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #121212;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Standard Sizebay Viewport Container:
+       Sizebay VFR V4 renders its own dark overlay backdrop and centered modal dialog
+       when hosted inside a full screen (100vw / 100vh) iframe viewport.
+    */
+    .iframe-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     #szb-modal {
-      width: 1127px;
-      height: 915px;
+      width: 100vw;
+      height: 100vh;
       border: 0;
       display: block;
       background: transparent;
     }
   </style>
 </head>
-
 <body>
-  <iframe
-    src="https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true"
-    id="szb-modal"
-    class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
-    sizebay-product-reference="82262568"
-    allow="clipboard-write; fullscreen">
-  </iframe>
+
+  <div class="iframe-container">
+    <!--
+      Sizebay Virtual Fitting Room (V4)
+      - Corrigido parâmetro ;lang=pt para &lang=pt
+      - Recebe dimensões de viewport dinâmicas (backdropWidth/backdropHeight)
+    -->
+    <iframe
+      id="szb-modal"
+      class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
+      sizebay-product-reference="82262568"
+      allow="clipboard-write; fullscreen"
+      src="https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true">
+    </iframe>
+  </div>
+
+  <script>
+    (function () {
+      const iframe = document.getElementById('szb-modal');
+      const productId = "82262568";
+      const tenantId = "7943";
+
+      function updateIframeUrl(sid) {
+        const width = window.innerWidth || 1127;
+        const height = window.innerHeight || 915;
+        const sidParam = sid ? encodeURIComponent(sid) : "";
+
+        // URL limpa sem crop, transform ou scale invasivo
+        const cleanUrl = `https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=${productId}&sid=${sidParam}&lang=pt&tenantId=${tenantId}&backdropWidth=${width}&backdropHeight=${height}&isMeasurementsTableEnabled=true`;
+        
+        iframe.src = cleanUrl;
+      }
+
+      // Tenta obter uma nova Session ID da API da Sizebay
+      fetch('https://vfr-v3-production.sizebay.technology/api/me/session-id')
+        .then(response => {
+          if (response.ok) return response.text();
+          throw new Error('Falha ao obter session-id');
+        })
+        .then(data => {
+          const cleanSid = data.replace(/"/g, '').trim();
+          if (cleanSid) {
+            updateIframeUrl(cleanSid);
+          }
+        })
+        .catch(err => {
+          console.warn('Usando fallback com sid vazio:', err.message);
+          updateIframeUrl('');
+        });
+
+      // Atualiza os parâmetros de backdrop no redimensionamento da janela
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const currentSrc = new URL(iframe.src);
+          const currentSid = currentSrc.searchParams.get('sid') || '';
+          updateIframeUrl(currentSid);
+        }, 300);
+      });
+    })();
+  </script>
 </body>
 </html>
