@@ -4,9 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Teste Sizebay Iframe Final</title>
+  <title>Teste Sizebay Iframe Limpo</title>
 
   <style>
+    :root {
+      /*
+        Tamanho total do iframe recebido da Sizebay.
+        Não mexa nestes dois primeiro.
+      */
+      --iframe-width: 1127px;
+      --iframe-height: 915px;
+
+      /*
+        Área visível útil do modal.
+        Esta é a parte que queremos manter.
+      */
+      --crop-width: 909px;
+      --crop-height: 506px;
+
+      /*
+        Ajustes finos caso precise mover o iframe dentro do recorte.
+        Comece com 0px.
+      */
+      --shift-x: 0px;
+      --shift-y: 0px;
+    }
+
     html,
     body {
       margin: 0;
@@ -27,10 +50,9 @@
       color: #fff;
       font-size: 18px;
       z-index: 10;
-      background: #111;
     }
 
-    #page {
+    #modal-area {
       position: fixed;
       inset: 0;
       display: none;
@@ -41,33 +63,56 @@
     }
 
     /*
-      Wrapper só para centralizar e escalar proporcionalmente.
-      Não recorta o iframe e não altera o cálculo interno da Sizebay.
+      Este bloco é a "janela" visível.
+      Tudo que passar deste tamanho será cortado.
     */
-    #scale-wrapper {
-      width: 1127px;
-      height: 915px;
-      transform-origin: center center;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-      background: transparent;
+    #iframe-crop {
+      position: relative;
+      width: var(--crop-width);
+      height: var(--crop-height);
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
     }
 
+    /*
+      O iframe continua grande para a Sizebay manter o layout correto.
+      O recorte acima remove a sobra branca e o X lateral.
+    */
     #szb-modal {
-      width: 1127px;
-      height: 915px;
+      position: absolute;
+      left: var(--shift-x);
+      top: var(--shift-y);
+      width: var(--iframe-width);
+      height: var(--iframe-height);
       border: 0;
+      background: #fff;
       display: block;
-      background: transparent;
+    }
+
+    /*
+      Máscara para esconder o botão preto "Fechar" dentro do iframe.
+      Não remove o botão de verdade, apenas cobre visualmente.
+    */
+    #hide-bottom-close {
+      position: absolute;
+      right: 20px;
+      bottom: 24px;
+      width: 120px;
+      height: 52px;
+      background: #fff;
+      z-index: 5;
+      pointer-events: auto;
     }
 
     #error {
       display: none;
       position: fixed;
       inset: 0;
-      padding: 32px;
-      box-sizing: border-box;
       background: #fff;
       color: #111;
+      padding: 32px;
+      box-sizing: border-box;
       z-index: 20;
     }
 
@@ -83,16 +128,20 @@
 </head>
 
 <body>
-  <div id="loading">Carregando Sizebay...</div>
+  <div id="loading">
+    Carregando iframe Sizebay...
+  </div>
 
-  <div id="page">
-    <div id="scale-wrapper">
+  <div id="modal-area">
+    <div id="iframe-crop">
       <iframe
         id="szb-modal"
         class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
         sizebay-product-reference="82262568"
         allow="clipboard-write; fullscreen">
       </iframe>
+
+      <div id="hide-bottom-close"></div>
     </div>
   </div>
 
@@ -106,12 +155,11 @@
     const PRODUCT_ID = "82262568";
     const LANG = "pt";
 
-    const IFRAME_WIDTH = 1127;
-    const IFRAME_HEIGHT = 915;
+    const BACKDROP_WIDTH = "1127";
+    const BACKDROP_HEIGHT = "915";
 
     const loading = document.getElementById("loading");
-    const page = document.getElementById("page");
-    const wrapper = document.getElementById("scale-wrapper");
+    const modalArea = document.getElementById("modal-area");
     const iframe = document.getElementById("szb-modal");
     const errorBox = document.getElementById("error");
     const errorDetail = document.getElementById("error-detail");
@@ -125,17 +173,6 @@
 
     function setCookie(name, value) {
       document.cookie = `${name}=${value}; path=/; max-age=31536000; SameSite=Lax`;
-    }
-
-    function resizeWrapper() {
-      const margin = 24;
-
-      const scaleX = (window.innerWidth - margin) / IFRAME_WIDTH;
-      const scaleY = (window.innerHeight - margin) / IFRAME_HEIGHT;
-
-      const scale = Math.min(scaleX, scaleY, 1);
-
-      wrapper.style.transform = `scale(${scale})`;
     }
 
     async function getSizebaySessionId() {
@@ -173,22 +210,9 @@
       url.searchParams.set("sid", sid);
       url.searchParams.set("lang", LANG);
       url.searchParams.set("tenantId", TENANT_ID);
-
-      /*
-        Manter fixo conforme iframe enviado pelo fornecedor.
-        Não trocar por window.innerWidth/window.innerHeight.
-      */
-      url.searchParams.set("backdropWidth", String(IFRAME_WIDTH));
-      url.searchParams.set("backdropHeight", String(IFRAME_HEIGHT));
-
+      url.searchParams.set("backdropWidth", BACKDROP_WIDTH);
+      url.searchParams.set("backdropHeight", BACKDROP_HEIGHT);
       url.searchParams.set("isMeasurementsTableEnabled", "true");
-
-      /*
-        Tentativa correta para remover os botões internos de fechamento.
-        Se a Sizebay respeitar esse parâmetro, some o X e o botão Fechar.
-        Se não respeitar, só o fornecedor consegue remover na configuração.
-      */
-      url.searchParams.set("disableCloseApp", "true");
 
       return url.toString();
     }
@@ -197,27 +221,24 @@
       console.error(error);
 
       loading.style.display = "none";
-      page.style.display = "none";
+      modalArea.style.display = "none";
       errorBox.style.display = "block";
       errorDetail.textContent = error.stack || error.message || String(error);
     }
 
     async function start() {
       try {
-        resizeWrapper();
-
         const sid = await getSizebaySessionId();
         const iframeUrl = buildIframeUrl(sid);
 
-        console.log("URL Sizebay:", iframeUrl);
+        console.log("URL iframe Sizebay:", iframeUrl);
+
+        iframe.src = iframeUrl;
 
         iframe.onload = function () {
           loading.style.display = "none";
-          page.style.display = "flex";
-          resizeWrapper();
+          modalArea.style.display = "flex";
         };
-
-        iframe.src = iframeUrl;
 
       } catch (error) {
         showError(error);
@@ -225,7 +246,6 @@
     }
 
     window.addEventListener("load", start);
-    window.addEventListener("resize", resizeWrapper);
   </script>
 </body>
 </html>
