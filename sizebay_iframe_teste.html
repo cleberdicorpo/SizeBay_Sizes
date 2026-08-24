@@ -6,19 +6,95 @@
 
   <title>SizeBay Medidas</title>
 
-  <meta
-    http-equiv="refresh"
-    content="0; url=https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true"
-  />
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.78);
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    #sizebay-page {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.78);
+      overflow: hidden;
+    }
+
+    #sizebay-wrapper {
+      width: 1127px;
+      height: 915px;
+      max-width: calc(100vw - 48px);
+      max-height: calc(100vh - 48px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      box-sizing: border-box;
+    }
+
+    #szb-modal {
+      width: 1127px;
+      height: 915px;
+      max-width: 100%;
+      max-height: 100%;
+      border: 0;
+      display: block;
+      background: transparent;
+    }
+
+    #fallback {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      font-size: 13px;
+      color: #fff;
+      text-align: center;
+    }
+
+    #fallback a {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 
 <body>
-  <p>Redirecionando para SizeBay Medidas...</p>
+  <main id="sizebay-page">
+    <div id="sizebay-wrapper">
+      <iframe
+        src="https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true"
+        id="szb-modal"
+        class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
+        sizebay-product-reference="82262568"
+        allow="clipboard-write; fullscreen">
+      </iframe>
+    </div>
+  </main>
 
-  <p>
-    <a href="https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true">
-      Clique aqui se não redirecionar automaticamente
+  <div id="fallback">
+    <a
+      href="https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true"
+      target="_blank"
+      rel="noopener">
+      Abrir SizeBay em nova aba
     </a>
-  </p>
+  </div>
 </body>
 </html>
