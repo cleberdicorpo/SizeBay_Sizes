@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Sizebay Iframe Fullscreen</title>
+  <title>Teste Sizebay Iframe</title>
 
   <style>
     html,
@@ -14,8 +14,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #111;
       font-family: Arial, sans-serif;
+      background: rgba(0, 0, 0, 0.75);
     }
 
     #loading {
@@ -24,30 +24,38 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #111;
-      color: #fff;
+      color: white;
       font-size: 18px;
       z-index: 2;
     }
 
-    #szb-modal {
+    #modal-wrapper {
       position: fixed;
       inset: 0;
-      width: 100vw;
-      height: 100vh;
-      border: 0;
       display: none;
-      background: transparent;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    #szb-modal {
+      width: 1127px;
+      height: 915px;
+      max-width: 95vw;
+      max-height: 95vh;
+      border: 0;
+      background: #fff;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
     }
 
     #error {
       display: none;
       position: fixed;
       inset: 0;
-      padding: 32px;
-      box-sizing: border-box;
       background: #fff;
       color: #111;
+      padding: 32px;
+      box-sizing: border-box;
       z-index: 3;
     }
 
@@ -63,14 +71,18 @@
 </head>
 
 <body>
-  <div id="loading">Carregando Sizebay...</div>
+  <div id="loading">
+    Carregando iframe Sizebay...
+  </div>
 
-  <iframe
-    id="szb-modal"
-    class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
-    sizebay-product-reference="82262568"
-    allow="clipboard-write; fullscreen">
-  </iframe>
+  <div id="modal-wrapper">
+    <iframe
+      id="szb-modal"
+      class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
+      sizebay-product-reference="82262568"
+      allow="clipboard-write; fullscreen">
+    </iframe>
+  </div>
 
   <div id="error">
     <h1>Erro ao carregar Sizebay</h1>
@@ -81,26 +93,15 @@
     const TENANT_ID = "7943";
     const PRODUCT_ID = "82262568";
     const LANG = "pt";
-    const COUNTRY = "BR";
+
+    const BACKDROP_WIDTH = "1127";
+    const BACKDROP_HEIGHT = "915";
 
     const loading = document.getElementById("loading");
+    const wrapper = document.getElementById("modal-wrapper");
     const iframe = document.getElementById("szb-modal");
     const errorBox = document.getElementById("error");
     const errorDetail = document.getElementById("error-detail");
-
-    function getDevice() {
-      const ua = navigator.userAgent;
-
-      if (/Android|webOS|iPhone|iPod|BlackBerry|Windows Phone/i.test(ua)) {
-        return "MOBILE";
-      }
-
-      if (/iPad|Tablet/i.test(ua)) {
-        return "TABLET";
-      }
-
-      return "DESKTOP";
-    }
 
     function getCookie(name) {
       return document.cookie
@@ -115,10 +116,10 @@
 
     async function getSizebaySessionId() {
       const cookieName = "SIZEBAY_SESSION_ID_V4";
-      const existingSid = getCookie(cookieName);
+      const sidFromCookie = getCookie(cookieName);
 
-      if (existingSid) {
-        return existingSid;
+      if (sidFromCookie) {
+        return sidFromCookie;
       }
 
       const response = await fetch(
@@ -126,7 +127,7 @@
       );
 
       if (!response.ok) {
-        throw new Error(`Erro ao gerar SID Sizebay. HTTP ${response.status}`);
+        throw new Error(`Erro ao gerar SID. HTTP ${response.status}`);
       }
 
       const sid = (await response.text()).replaceAll('"', "").trim();
@@ -146,25 +147,11 @@
       url.searchParams.set("mode", "vfr");
       url.searchParams.set("id", PRODUCT_ID);
       url.searchParams.set("sid", sid);
-      url.searchParams.set("tenantId", TENANT_ID);
       url.searchParams.set("lang", LANG);
-      url.searchParams.set("device", getDevice());
-      url.searchParams.set("countryValue", COUNTRY);
-      url.searchParams.set("watchOpeningEvents", "true");
+      url.searchParams.set("tenantId", TENANT_ID);
+      url.searchParams.set("backdropWidth", BACKDROP_WIDTH);
+      url.searchParams.set("backdropHeight", BACKDROP_HEIGHT);
       url.searchParams.set("isMeasurementsTableEnabled", "true");
-
-      /*
-        Este é o ajuste principal:
-        desativa os botões/triggers internos de fechamento da Sizebay.
-      */
-      url.searchParams.set("disableCloseApp", "true");
-
-      /*
-        Mantém o cálculo interno coerente com o tamanho real da tela.
-        Não usa crop, não usa máscara, não desloca o modal.
-      */
-      url.searchParams.set("backdropWidth", String(window.innerWidth));
-      url.searchParams.set("backdropHeight", String(window.innerHeight));
 
       return url.toString();
     }
@@ -173,7 +160,7 @@
       console.error(error);
 
       loading.style.display = "none";
-      iframe.style.display = "none";
+      wrapper.style.display = "none";
       errorBox.style.display = "block";
       errorDetail.textContent = error.stack || error.message || String(error);
     }
@@ -183,14 +170,12 @@
         const sid = await getSizebaySessionId();
         const iframeUrl = buildIframeUrl(sid);
 
-        console.log("URL Sizebay:", iframeUrl);
-
-        iframe.onload = function () {
-          loading.style.display = "none";
-          iframe.style.display = "block";
-        };
+        console.log("Iframe Sizebay:", iframeUrl);
 
         iframe.src = iframeUrl;
+
+        wrapper.style.display = "flex";
+        loading.style.display = "none";
 
       } catch (error) {
         showError(error);
