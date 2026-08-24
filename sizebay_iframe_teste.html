@@ -3,105 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SizeBay Medidas - Provador Virtual</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
 
-    html, body {
+  <title>SizeBay Medidas</title>
+
+  <style>
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
-      background-color: #121212;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
     }
 
-    /* Standard Sizebay Viewport Container:
-       Sizebay VFR V4 renders its own dark overlay backdrop and centered modal dialog
-       when hosted inside a full screen (100vw / 100vh) iframe viewport.
-    */
-    .iframe-container {
-      width: 100vw;
-      height: 100vh;
+    body {
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
-    #szb-modal {
-      width: 100vw;
-      height: 100vh;
+    .box {
+      max-width: 420px;
+      padding: 32px;
+    }
+
+    .box h1 {
+      margin-bottom: 12px;
+      font-size: 24px;
+    }
+
+    .box p {
+      margin-bottom: 24px;
+      color: #ccc;
+    }
+
+    .box button {
+      padding: 14px 22px;
       border: 0;
-      display: block;
-      background: transparent;
+      background: #ffffff;
+      color: #111;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
     }
   </style>
 </head>
-<body>
 
-  <div class="iframe-container">
-    <!--
-      Sizebay Virtual Fitting Room (V4)
-      - Corrigido parâmetro ;lang=pt para &lang=pt
-      - Recebe dimensões de viewport dinâmicas (backdropWidth/backdropHeight)
-    -->
-    <iframe
-      id="szb-modal"
-      class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
-      sizebay-product-reference="82262568"
-      allow="clipboard-write; fullscreen"
-      src="https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=82262568&sid=&lang=pt&tenantId=7943&backdropWidth=1127&backdropHeight=915&isMeasurementsTableEnabled=true">
-    </iframe>
+<body>
+  <div class="box">
+    <h1>SizeBay Medidas</h1>
+    <p>Carregando o provador virtual...</p>
+    <button onclick="abrirSizeBay()">Abrir SizeBay</button>
   </div>
 
   <script>
-    (function () {
-      const iframe = document.getElementById('szb-modal');
-      const productId = "82262568";
-      const tenantId = "7943";
+    const SIZEBAY_URL =
+      "https://vfr-v3-production.sizebay.technology/V4/" +
+      "?mode=vfr" +
+      "&id=82262568" +
+      "&sid=" +
+      "&lang=pt" +
+      "&tenantId=7943" +
+      "&backdropWidth=1127" +
+      "&backdropHeight=915" +
+      "&isMeasurementsTableEnabled=true";
 
-      function updateIframeUrl(sid) {
-        const width = window.innerWidth || 1127;
-        const height = window.innerHeight || 915;
-        const sidParam = sid ? encodeURIComponent(sid) : "";
+    function abrirSizeBay() {
+      window.location.href = SIZEBAY_URL;
+    }
 
-        // URL limpa sem crop, transform ou scale invasivo
-        const cleanUrl = `https://vfr-v3-production.sizebay.technology/V4/?mode=vfr&id=${productId}&sid=${sidParam}&lang=pt&tenantId=${tenantId}&backdropWidth=${width}&backdropHeight=${height}&isMeasurementsTableEnabled=true`;
-        
-        iframe.src = cleanUrl;
-      }
-
-      // Tenta obter uma nova Session ID da API da Sizebay
-      fetch('https://vfr-v3-production.sizebay.technology/api/me/session-id')
-        .then(response => {
-          if (response.ok) return response.text();
-          throw new Error('Falha ao obter session-id');
-        })
-        .then(data => {
-          const cleanSid = data.replace(/"/g, '').trim();
-          if (cleanSid) {
-            updateIframeUrl(cleanSid);
-          }
-        })
-        .catch(err => {
-          console.warn('Usando fallback com sid vazio:', err.message);
-          updateIframeUrl('');
-        });
-
-      // Atualiza os parâmetros de backdrop no redimensionamento da janela
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          const currentSrc = new URL(iframe.src);
-          const currentSid = currentSrc.searchParams.get('sid') || '';
-          updateIframeUrl(currentSid);
-        }, 300);
-      });
-    })();
+    window.addEventListener("load", function () {
+      setTimeout(abrirSizeBay, 500);
+    });
   </script>
 </body>
 </html>
