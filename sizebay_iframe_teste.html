@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Teste Sizebay Iframe</title>
+  <title>Teste Sizebay Iframe Final</title>
 
   <style>
     html,
@@ -14,8 +14,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      background: #111;
       font-family: Arial, sans-serif;
-      background: rgba(0, 0, 0, 0.75);
     }
 
     #loading {
@@ -24,39 +24,51 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      color: #fff;
       font-size: 18px;
-      z-index: 2;
+      z-index: 10;
+      background: #111;
     }
 
-    #modal-wrapper {
+    #page {
       position: fixed;
       inset: 0;
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1;
+      background: #111;
+      overflow: hidden;
+    }
+
+    /*
+      Wrapper só para centralizar e escalar proporcionalmente.
+      Não recorta o iframe e não altera o cálculo interno da Sizebay.
+    */
+    #scale-wrapper {
+      width: 1127px;
+      height: 915px;
+      transform-origin: center center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      background: transparent;
     }
 
     #szb-modal {
       width: 1127px;
       height: 915px;
-      max-width: 95vw;
-      max-height: 95vh;
       border: 0;
-      background: #fff;
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+      display: block;
+      background: transparent;
     }
 
     #error {
       display: none;
       position: fixed;
       inset: 0;
-      background: #fff;
-      color: #111;
       padding: 32px;
       box-sizing: border-box;
-      z-index: 3;
+      background: #fff;
+      color: #111;
+      z-index: 20;
     }
 
     #error pre {
@@ -71,17 +83,17 @@
 </head>
 
 <body>
-  <div id="loading">
-    Carregando iframe Sizebay...
-  </div>
+  <div id="loading">Carregando Sizebay...</div>
 
-  <div id="modal-wrapper">
-    <iframe
-      id="szb-modal"
-      class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
-      sizebay-product-reference="82262568"
-      allow="clipboard-write; fullscreen">
-    </iframe>
+  <div id="page">
+    <div id="scale-wrapper">
+      <iframe
+        id="szb-modal"
+        class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
+        sizebay-product-reference="82262568"
+        allow="clipboard-write; fullscreen">
+      </iframe>
+    </div>
   </div>
 
   <div id="error">
@@ -94,11 +106,12 @@
     const PRODUCT_ID = "82262568";
     const LANG = "pt";
 
-    const BACKDROP_WIDTH = "1127";
-    const BACKDROP_HEIGHT = "915";
+    const IFRAME_WIDTH = 1127;
+    const IFRAME_HEIGHT = 915;
 
     const loading = document.getElementById("loading");
-    const wrapper = document.getElementById("modal-wrapper");
+    const page = document.getElementById("page");
+    const wrapper = document.getElementById("scale-wrapper");
     const iframe = document.getElementById("szb-modal");
     const errorBox = document.getElementById("error");
     const errorDetail = document.getElementById("error-detail");
@@ -112,6 +125,17 @@
 
     function setCookie(name, value) {
       document.cookie = `${name}=${value}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+
+    function resizeWrapper() {
+      const margin = 24;
+
+      const scaleX = (window.innerWidth - margin) / IFRAME_WIDTH;
+      const scaleY = (window.innerHeight - margin) / IFRAME_HEIGHT;
+
+      const scale = Math.min(scaleX, scaleY, 1);
+
+      wrapper.style.transform = `scale(${scale})`;
     }
 
     async function getSizebaySessionId() {
@@ -149,9 +173,22 @@
       url.searchParams.set("sid", sid);
       url.searchParams.set("lang", LANG);
       url.searchParams.set("tenantId", TENANT_ID);
-      url.searchParams.set("backdropWidth", BACKDROP_WIDTH);
-      url.searchParams.set("backdropHeight", BACKDROP_HEIGHT);
+
+      /*
+        Manter fixo conforme iframe enviado pelo fornecedor.
+        Não trocar por window.innerWidth/window.innerHeight.
+      */
+      url.searchParams.set("backdropWidth", String(IFRAME_WIDTH));
+      url.searchParams.set("backdropHeight", String(IFRAME_HEIGHT));
+
       url.searchParams.set("isMeasurementsTableEnabled", "true");
+
+      /*
+        Tentativa correta para remover os botões internos de fechamento.
+        Se a Sizebay respeitar esse parâmetro, some o X e o botão Fechar.
+        Se não respeitar, só o fornecedor consegue remover na configuração.
+      */
+      url.searchParams.set("disableCloseApp", "true");
 
       return url.toString();
     }
@@ -160,22 +197,27 @@
       console.error(error);
 
       loading.style.display = "none";
-      wrapper.style.display = "none";
+      page.style.display = "none";
       errorBox.style.display = "block";
       errorDetail.textContent = error.stack || error.message || String(error);
     }
 
     async function start() {
       try {
+        resizeWrapper();
+
         const sid = await getSizebaySessionId();
         const iframeUrl = buildIframeUrl(sid);
 
-        console.log("Iframe Sizebay:", iframeUrl);
+        console.log("URL Sizebay:", iframeUrl);
+
+        iframe.onload = function () {
+          loading.style.display = "none";
+          page.style.display = "flex";
+          resizeWrapper();
+        };
 
         iframe.src = iframeUrl;
-
-        wrapper.style.display = "flex";
-        loading.style.display = "none";
 
       } catch (error) {
         showError(error);
@@ -183,6 +225,7 @@
     }
 
     window.addEventListener("load", start);
+    window.addEventListener("resize", resizeWrapper);
   </script>
 </body>
 </html>
