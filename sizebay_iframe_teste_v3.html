@@ -65,13 +65,17 @@
 
     /*
       Desktop:
-      tamanho próximo ao seu print correto.
+      A Sizebay exige largura interna >= 946px (innerWidth + 18 >= 946)
+      para carregar a interface Desktop.
+      Abaixo de 946px (entre 768px e 945px), a Sizebay classifica
+      como TABLET e exige rotação de tela ("Coloque seu dispositivo na horizontal").
+      Por isso, o container precisa de pelo menos 960px de largura no Desktop.
     */
     #vfr-container {
       position: relative;
 
-      width: 909px;
-      height: 500px;
+      width: 960px;
+      height: 560px;
 
       max-width: calc(100vw - 40px);
       max-height: calc(100vh - 40px);
@@ -123,12 +127,10 @@
     }
 
     /*
-      No mobile usamos a tela inteira disponível.
-
-      Não tentamos transformar portrait em landscape
-      artificialmente.
+      Abaixo de 960px usamos a tela inteira (modo mobile da Sizebay).
+      Isso evita cair na faixa de tablet (768px - 945px) que bloqueia a interface.
     */
-    @media (max-width: 767px) {
+    @media (max-width: 959px) {
       body {
         display: block;
       }
@@ -259,12 +261,11 @@
         );
 
 
-      if (isTablet) {
+      if (isTablet && width >= 960) {
         return "TABLET";
       }
 
-
-      if (isMobile || width < 768) {
+      if (isMobile || width < 960) {
         return "MOBILE";
       }
 
