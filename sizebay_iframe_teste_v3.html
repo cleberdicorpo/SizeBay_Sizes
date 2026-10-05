@@ -65,24 +65,27 @@
 
     /*
       Desktop:
-      A Sizebay exige largura interna >= 946px (innerWidth + 18 >= 946)
-      para carregar a interface Desktop.
-      Abaixo de 946px (entre 768px e 945px), a Sizebay classifica
-      como TABLET e exige rotação de tela ("Coloque seu dispositivo na horizontal").
-      Por isso, o container precisa de pelo menos 960px de largura no Desktop.
+      O card principal da Sizebay possui exatamente 908px x 500px.
+      O container (#vfr-container) é recortado com 908px x 500px e overflow: hidden.
+      O iframe interno possui 960px de largura interna para satisfazer a regra da
+      Sizebay (innerWidth + 18 >= 946), garantindo o modo Desktop.
+      A sobra lateral e o fundo branco extra ficam completamente invisíveis,
+      exibindo apenas o card principal flutuando sobre o fundo escuro.
     */
     #vfr-container {
       position: relative;
 
-      width: 960px;
-      height: 560px;
+      width: 908px;
+      height: 500px;
 
       max-width: calc(100vw - 40px);
       max-height: calc(100vh - 40px);
 
-      background: #fff;
+      background: transparent;
 
       overflow: hidden;
+
+      border-radius: 4px;
 
       box-shadow:
         0 12px 40px rgba(0, 0, 0, 0.45);
@@ -91,12 +94,12 @@
     #szb-modal {
       display: block;
 
-      width: 100%;
-      height: 100%;
+      width: 960px;
+      height: 500px;
 
       border: 0;
 
-      background: #fff;
+      background: transparent;
     }
 
     #error {
@@ -151,7 +154,13 @@
         max-width: none;
         max-height: none;
 
+        border-radius: 0;
         box-shadow: none;
+      }
+
+      #szb-modal {
+        width: 100vw;
+        height: 100vh;
       }
     }
   </style>
@@ -171,6 +180,7 @@
         id="szb-modal"
         title="Provador Virtual Sizebay"
         allow="clipboard-write; fullscreen"
+        allowtransparency="true"
       ></iframe>
 
     </div>
@@ -575,6 +585,20 @@
               "x",
               iframe.getBoundingClientRect().height
             );
+
+
+            try {
+              iframe.contentWindow.postMessage(
+                {
+                  id: "szb-settings-vfr-customization",
+                  css: "html, body, #vfr-root { background: transparent !important; }"
+                },
+                "*"
+              );
+            }
+            catch (e) {
+              console.warn("PostMessage não enviado:", e);
+            }
 
 
             loading.style.display =
