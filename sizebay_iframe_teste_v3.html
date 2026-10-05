@@ -2,45 +2,40 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Teste Sizebay Iframe Ajustado</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Teste Sizebay Iframe</title>
 
   <style>
     :root {
       /*
-        Tamanho informado para a Sizebay montar o layout interno.
-
-        Aumentamos a largura para tentar fazer a Sizebay
-        separar melhor:
-        - imagem da roupa à esquerda
-        - formulário/conteúdo à direita
-      */
-      --iframe-width: 1400px;
+       * Tamanho real do VFR.
+       *
+       * Vamos manter o iframe com a mesma largura
+       * da área apresentada para a Sizebay.
+       */
+      --iframe-width: 1127px;
       --iframe-height: 915px;
 
       /*
-        Área realmente visível na página.
-      */
+       * Área que queremos mostrar na tela.
+       */
       --crop-width: 909px;
       --crop-height: 506px;
 
       /*
-        Deslocamento do iframe dentro da janela de recorte.
-
-        Como o iframe agora possui 1400px e mostramos apenas 909px,
-        movemos o iframe para a esquerda para enquadrar a região central.
-
-        Diferença:
-        1400 - 909 = 491px
-        491 / 2 = 245,5px
-      */
-      --shift-x: -245px;
-
-      /*
-        Ajuste vertical.
-        Pode ser refinado depois se necessário.
-      */
+       * Deslocamento do iframe.
+       *
+       * Neste teste NÃO vamos centralizar matematicamente.
+       * Vamos começar mostrando a parte esquerda do VFR,
+       * porque queremos preservar a região onde deveria
+       * aparecer a roupa.
+       */
+      --shift-x: 0px;
       --shift-y: 0px;
     }
 
@@ -48,53 +43,62 @@
     body {
       margin: 0;
       padding: 0;
+
       width: 100%;
       height: 100%;
+
       overflow: hidden;
+
       background: #111;
-      font-family: Arial, sans-serif;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
     }
 
     /*
-      Loading inicial.
-    */
+     * Loading
+     */
     #loading {
       position: fixed;
+
       inset: 0;
 
       display: flex;
       align-items: center;
       justify-content: center;
 
-      color: #fff;
-      font-size: 18px;
-
       background: #111;
 
-      z-index: 10;
+      color: #fff;
+
+      font-size: 18px;
+
+      z-index: 100;
     }
 
     /*
-      Área que centraliza o conteúdo Sizebay.
-    */
+     * Área externa.
+     */
     #modal-area {
       position: fixed;
+
       inset: 0;
 
       display: none;
+
       align-items: center;
       justify-content: center;
 
       background: #111;
+
       overflow: hidden;
     }
 
     /*
-      Janela visível.
-
-      O iframe é maior que esta área.
-      Tudo que passar será cortado.
-    */
+     * Janela visível.
+     */
     #iframe-crop {
       position: relative;
 
@@ -107,17 +111,11 @@
 
       box-shadow:
         0 12px 40px rgba(0, 0, 0, 0.45);
-
-      border-top: 5px solid #eee;
     }
 
     /*
-      Iframe Sizebay.
-
-      Mantemos ele maior que a janela externa
-      para que a Sizebay monte o layout desktop
-      considerando uma largura maior.
-    */
+     * Iframe Sizebay.
+     */
     #szb-modal {
       position: absolute;
 
@@ -135,61 +133,61 @@
     }
 
     /*
-      Máscara opcional para cobrir algum botão interno
-      de fechamento da Sizebay.
-
-      Caso não esteja cobrindo nada necessário,
-      pode deixar como está ou remover depois.
-    */
-    #hide-bottom-close {
-      position: absolute;
-
-      right: 0;
-      bottom: 0;
-
-      width: 150px;
-      height: 65px;
-
-      background: #fff;
-
-      z-index: 5;
-
-      pointer-events: auto;
-    }
-
-    /*
-      Tela de erro.
-    */
+     * Tela de erro.
+     */
     #error {
       display: none;
 
       position: fixed;
-      inset: 0;
 
-      background: #fff;
-      color: #111;
+      inset: 0;
 
       padding: 32px;
 
       box-sizing: border-box;
 
-      z-index: 20;
-    }
+      background: #fff;
 
-    #error h1 {
-      margin-top: 0;
+      color: #111;
+
+      z-index: 200;
     }
 
     #error pre {
+      padding: 16px;
+
       background: #111;
       color: #0f0;
 
-      padding: 16px;
-
       white-space: pre-wrap;
+
       overflow: auto;
 
       max-height: 70vh;
+    }
+
+    /*
+     * Barra de diagnóstico.
+     *
+     * Depois podemos remover.
+     */
+    #debug {
+      position: fixed;
+
+      left: 10px;
+      bottom: 10px;
+
+      padding: 8px 12px;
+
+      background: rgba(0, 0, 0, 0.75);
+
+      color: #fff;
+
+      font-size: 12px;
+
+      z-index: 300;
+
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -197,8 +195,9 @@
 <body>
 
   <div id="loading">
-    Carregando iframe Sizebay...
+    Carregando Sizebay...
   </div>
+
 
   <div id="modal-area">
 
@@ -208,84 +207,139 @@
         id="szb-modal"
         class="vfr-app szb-modal-desktop szb-modal-open modal-loaded"
         sizebay-product-reference="118678521"
-        allow="clipboard-write; fullscreen">
-      </iframe>
-
-      <div id="hide-bottom-close"></div>
+        allow="clipboard-write; fullscreen"
+      ></iframe>
 
     </div>
 
   </div>
 
+
   <div id="error">
-    <h1>Erro ao carregar Sizebay</h1>
+
+    <h1>
+      Erro ao carregar Sizebay
+    </h1>
+
     <pre id="error-detail"></pre>
+
   </div>
 
+
+  <div id="debug">
+    Sizebay DESKTOP 1127 × 915
+  </div>
+
+
   <script>
-    /*
-      Configurações Sizebay
-    */
-    const TENANT_ID = "8361";
-    const PRODUCT_ID = "118678521";
-    const LANG = "pt";
 
     /*
-      IMPORTANTE:
+     * =====================================================
+     * CONFIGURAÇÃO
+     * =====================================================
+     */
 
-      Este valor precisa acompanhar a largura CSS
-      definida em:
+    const TENANT_ID =
+      "8361";
 
-      --iframe-width: 1400px
-
-      Isso faz a Sizebay acreditar que possui
-      uma área maior disponível.
-    */
-    const BACKDROP_WIDTH = "1400";
-
-    const BACKDROP_HEIGHT = "915";
+    const PRODUCT_ID =
+      "118678521";
 
     /*
-      Elementos
-    */
+     * A documentação atual da Sizebay utiliza
+     * códigos como br, en, es etc.
+     */
+    const LANG =
+      "br";
+
+    /*
+     * Forçamos desktop.
+     */
+    const DEVICE =
+      "DESKTOP";
+
+    /*
+     * Mantemos os valores coerentes com o tamanho
+     * real do iframe.
+     */
+    const BACKDROP_WIDTH =
+      "1127";
+
+    const BACKDROP_HEIGHT =
+      "915";
+
+
+    /*
+     * =====================================================
+     * ELEMENTOS
+     * =====================================================
+     */
+
     const loading =
-      document.getElementById("loading");
+      document.getElementById(
+        "loading"
+      );
 
     const modalArea =
-      document.getElementById("modal-area");
+      document.getElementById(
+        "modal-area"
+      );
 
     const iframe =
-      document.getElementById("szb-modal");
+      document.getElementById(
+        "szb-modal"
+      );
 
     const errorBox =
-      document.getElementById("error");
+      document.getElementById(
+        "error"
+      );
 
     const errorDetail =
-      document.getElementById("error-detail");
+      document.getElementById(
+        "error-detail"
+      );
 
 
     /*
-      Busca cookie local.
-    */
+     * =====================================================
+     * COOKIE
+     * =====================================================
+     */
+
     function getCookie(name) {
-      const cookie = document.cookie
-        .split("; ")
-        .find(row => row.startsWith(name + "="));
+
+      const cookies =
+        document.cookie
+          .split("; ");
+
+      const cookie =
+        cookies.find(
+          row =>
+            row.startsWith(
+              name + "="
+            )
+        );
 
       if (!cookie) {
         return null;
       }
 
-      return cookie.split("=")[1];
+      return decodeURIComponent(
+        cookie.substring(
+          name.length + 1
+        )
+      );
     }
 
 
-    /*
-      Salva cookie local.
-    */
-    function setCookie(name, value) {
+    function setCookie(
+      name,
+      value
+    ) {
+
       document.cookie =
-        `${name}=${value}; ` +
+        `${name}=${encodeURIComponent(value)}; ` +
         `path=/; ` +
         `max-age=31536000; ` +
         `SameSite=Lax`;
@@ -293,149 +347,195 @@
 
 
     /*
-      Obtém o SID da Sizebay.
-    */
+     * =====================================================
+     * SESSION ID
+     * =====================================================
+     */
+
     async function getSizebaySessionId() {
 
       const cookieName =
         "SIZEBAY_SESSION_ID_V4";
 
-      const sidFromCookie =
-        getCookie(cookieName);
-
-      /*
-        Se já existe uma sessão,
-        reutilizamos.
-      */
-      if (sidFromCookie) {
-        console.log(
-          "SID Sizebay recuperado do cookie:",
-          sidFromCookie
+      const existingSid =
+        getCookie(
+          cookieName
         );
 
-        return sidFromCookie;
+      if (existingSid) {
+
+        console.log(
+          "SID recuperado:",
+          existingSid
+        );
+
+        return existingSid;
       }
 
-      /*
-        Caso contrário,
-        gera uma nova sessão.
-      */
-      const response = await fetch(
-        "https://vfr-v3-production.sizebay.technology/api/me/session-id"
-      );
+
+      const response =
+        await fetch(
+          "https://vfr-v3-production.sizebay.technology/api/me/session-id"
+        );
+
 
       if (!response.ok) {
+
         throw new Error(
           `Erro ao gerar SID. HTTP ${response.status}`
         );
       }
 
-      const responseText =
+
+      const raw =
         await response.text();
 
+
       const sid =
-        responseText
-          .replaceAll('"', "")
+        raw
+          .replaceAll(
+            '"',
+            ""
+          )
           .trim();
 
+
       if (!sid) {
+
         throw new Error(
-          "A Sizebay retornou SID vazio."
+          "Sizebay retornou SID vazio."
         );
       }
 
-      /*
-        Guarda a sessão para reutilização.
-      */
+
       setCookie(
         cookieName,
         sid
       );
 
-      console.log(
-        "Novo SID Sizebay:",
-        sid
-      );
 
       return sid;
     }
 
 
     /*
-      Monta a URL final do iframe.
-    */
-    function buildIframeUrl(sid) {
+     * =====================================================
+     * URL DO VFR
+     * =====================================================
+     */
 
-      const url = new URL(
-        "https://vfr-v3-production.sizebay.technology/V4/"
-      );
+    function buildIframeUrl(
+      sid
+    ) {
+
+      const url =
+        new URL(
+          "https://vfr-v3-production.sizebay.technology/V4/"
+        );
+
 
       url.searchParams.set(
         "mode",
         "vfr"
       );
 
+
       url.searchParams.set(
         "id",
         PRODUCT_ID
       );
+
 
       url.searchParams.set(
         "sid",
         sid
       );
 
-      url.searchParams.set(
-        "lang",
-        LANG
-      );
 
       url.searchParams.set(
         "tenantId",
         TENANT_ID
       );
 
+
+      url.searchParams.set(
+        "lang",
+        LANG
+      );
+
+
       /*
-        Esses parâmetros são os mais importantes
-        para o layout que estamos tentando obter.
-      */
+       * Parâmetro importante:
+       * informa explicitamente que é desktop.
+       */
+      url.searchParams.set(
+        "device",
+        DEVICE
+      );
+
+
+      /*
+       * Recomendado pela própria documentação
+       * para integração via iframe/API.
+       */
+      url.searchParams.set(
+        "watchOpeningEvents",
+        "true"
+      );
+
+
+      /*
+       * Mantemos por enquanto porque você já
+       * estava utilizando estes parâmetros.
+       */
       url.searchParams.set(
         "backdropWidth",
         BACKDROP_WIDTH
       );
+
 
       url.searchParams.set(
         "backdropHeight",
         BACKDROP_HEIGHT
       );
 
+
       url.searchParams.set(
         "isMeasurementsTableEnabled",
         "true"
       );
+
 
       return url.toString();
     }
 
 
     /*
-      Exibe tela de erro.
-    */
-    function showError(error) {
+     * =====================================================
+     * ERRO
+     * =====================================================
+     */
+
+    function showError(
+      error
+    ) {
 
       console.error(
-        "Erro Sizebay:",
         error
       );
+
 
       loading.style.display =
         "none";
 
+
       modalArea.style.display =
         "none";
 
+
       errorBox.style.display =
         "block";
+
 
       errorDetail.textContent =
         error.stack ||
@@ -445,67 +545,71 @@
 
 
     /*
-      Inicialização.
-    */
+     * =====================================================
+     * START
+     * =====================================================
+     */
+
     async function start() {
 
       try {
 
-        /*
-          1. Obtém sessão Sizebay
-        */
         const sid =
           await getSizebaySessionId();
 
-        /*
-          2. Monta URL
-        */
+
         const iframeUrl =
-          buildIframeUrl(sid);
+          buildIframeUrl(
+            sid
+          );
+
 
         console.log(
-          "URL iframe Sizebay:",
+          "URL Sizebay:"
+        );
+
+        console.log(
           iframeUrl
         );
 
-        /*
-          3. Configura callback
-          ANTES de definir o src.
-        */
-        iframe.onload = function () {
 
-          console.log(
-            "Iframe Sizebay carregado."
-          );
+        iframe.onload =
+          function () {
 
-          loading.style.display =
-            "none";
+            console.log(
+              "Sizebay carregada."
+            );
 
-          modalArea.style.display =
-            "flex";
-        };
 
-        /*
-          4. Carrega Sizebay
-        */
+            loading.style.display =
+              "none";
+
+
+            modalArea.style.display =
+              "flex";
+          };
+
+
         iframe.src =
           iframeUrl;
 
-      } catch (error) {
+      }
+      catch (
+        error
+      ) {
 
-        showError(error);
-
+        showError(
+          error
+        );
       }
     }
 
 
-    /*
-      Inicializa quando a página carregar.
-    */
     window.addEventListener(
       "load",
       start
     );
+
   </script>
 
 </body>
