@@ -11,14 +11,6 @@
   <title>Sizebay VFR</title>
 
   <style>
-    :root {
-      /*
-       * Mantemos o iframe claramente em formato landscape.
-       */
-      --vfr-width: 909px;
-      --vfr-height: 500px;
-    }
-
     * {
       box-sizing: border-box;
     }
@@ -27,37 +19,22 @@
     body {
       margin: 0;
       padding: 0;
-
       width: 100%;
       min-height: 100%;
-
       background: #111;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
       min-height: 100vh;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       overflow: hidden;
     }
 
-    /*
-     * =====================================================
-     * LOADING
-     * =====================================================
-     */
-
     #loading {
       position: fixed;
-
       inset: 0;
 
       display: flex;
@@ -65,7 +42,6 @@
       justify-content: center;
 
       background: #111;
-
       color: #fff;
 
       font-size: 18px;
@@ -73,38 +49,32 @@
       z-index: 100;
     }
 
-    /*
-     * =====================================================
-     * MODAL
-     * =====================================================
-     */
-
     #modal-area {
       display: none;
 
-      width: 100%;
-      height: 100vh;
-
       align-items: center;
       justify-content: center;
+
+      width: 100%;
+      min-height: 100vh;
+
+      padding: 20px;
 
       background: #111;
     }
 
     /*
-     * =====================================================
-     * CONTAINER
-     * =====================================================
-     */
-
+      Desktop:
+      tamanho próximo ao seu print correto.
+    */
     #vfr-container {
       position: relative;
 
-      width: var(--vfr-width);
-      height: var(--vfr-height);
+      width: 909px;
+      height: 500px;
 
-      max-width: calc(100vw - 32px);
-      max-height: calc(100vh - 32px);
+      max-width: calc(100vw - 40px);
+      max-height: calc(100vh - 40px);
 
       background: #fff;
 
@@ -114,59 +84,73 @@
         0 12px 40px rgba(0, 0, 0, 0.45);
     }
 
-    /*
-     * =====================================================
-     * IFRAME
-     * =====================================================
-     */
-
     #szb-modal {
       display: block;
 
-      width: 909px;
-      height: 500px;
-
-      min-width: 909px;
-      min-height: 500px;
+      width: 100%;
+      height: 100%;
 
       border: 0;
 
       background: #fff;
     }
 
-    /*
-     * =====================================================
-     * ERRO
-     * =====================================================
-     */
-
     #error {
       display: none;
 
       position: fixed;
-
       inset: 0;
 
       padding: 32px;
 
       background: #fff;
-
       color: #111;
 
       z-index: 200;
     }
 
     #error pre {
-      padding: 16px;
-
       background: #111;
       color: #0f0;
+
+      padding: 16px;
 
       white-space: pre-wrap;
 
       overflow: auto;
 
       max-height: 70vh;
+    }
+
+    /*
+      No mobile usamos a tela inteira disponível.
+
+      Não tentamos transformar portrait em landscape
+      artificialmente.
+    */
+    @media (max-width: 767px) {
+      body {
+        display: block;
+      }
+
+      #modal-area {
+        width: 100vw;
+        height: 100vh;
+
+        min-height: 100vh;
+
+        padding: 0;
+      }
+
+      #vfr-container {
+        width: 100vw;
+        height: 100vh;
+
+        max-width: none;
+        max-height: none;
+
+        box-shadow: none;
+      }
     }
   </style>
 </head>
@@ -176,7 +160,6 @@
   <div id="loading">
     Carregando Sizebay...
   </div>
-
 
   <div id="modal-area">
 
@@ -192,7 +175,6 @@
 
   </div>
 
-
   <div id="error">
 
     <h1>
@@ -203,9 +185,7 @@
 
   </div>
 
-
   <script>
-
     /*
      * =====================================================
      * CONFIGURAÇÃO
@@ -229,29 +209,68 @@
      */
 
     const loading =
-      document.getElementById(
-        "loading"
-      );
+      document.getElementById("loading");
 
     const modalArea =
-      document.getElementById(
-        "modal-area"
-      );
+      document.getElementById("modal-area");
 
     const iframe =
-      document.getElementById(
-        "szb-modal"
-      );
+      document.getElementById("szb-modal");
 
     const errorBox =
-      document.getElementById(
-        "error"
-      );
+      document.getElementById("error");
 
     const errorDetail =
-      document.getElementById(
-        "error-detail"
-      );
+      document.getElementById("error-detail");
+
+
+    /*
+     * =====================================================
+     * DETECÇÃO DO DEVICE
+     * =====================================================
+     *
+     * DESKTOP
+     * MOBILE
+     * TABLET
+     *
+     * Esses são valores documentados pela Sizebay.
+     */
+
+    function getSizebayDevice() {
+
+      const width =
+        window.innerWidth;
+
+      const userAgent =
+        navigator.userAgent || "";
+
+      const isTablet =
+        /iPad|Tablet|PlayBook|Silk/i.test(
+          userAgent
+        ) ||
+        (
+          /Android/i.test(userAgent) &&
+          width >= 768
+        );
+
+      const isMobile =
+        /Android|iPhone|iPod|Mobile/i.test(
+          userAgent
+        );
+
+
+      if (isTablet) {
+        return "TABLET";
+      }
+
+
+      if (isMobile || width < 768) {
+        return "MOBILE";
+      }
+
+
+      return "DESKTOP";
+    }
 
 
     /*
@@ -273,9 +292,11 @@
             )
         );
 
+
       if (!cookie) {
         return null;
       }
+
 
       return decodeURIComponent(
         cookie.substring(
@@ -376,7 +397,8 @@
      */
 
     function buildIframeUrl(
-      sid
+      sid,
+      device
     ) {
 
       const url =
@@ -416,18 +438,23 @@
 
 
       /*
-       * IMPORTANTE:
-       *
-       * Neste teste NÃO vamos enviar:
-       *
-       * device
-       * backdropWidth
-       * backdropHeight
-       * watchOpeningEvents
-       *
-       * Vamos deixar a Sizebay inferir o layout
-       * diretamente pelo tamanho real do iframe.
+       * Parâmetro obrigatório/documentado
+       * pela Sizebay.
        */
+      url.searchParams.set(
+        "device",
+        device
+      );
+
+
+      /*
+       * Também documentado como obrigatório
+       * para implantação via API.
+       */
+      url.searchParams.set(
+        "watchOpeningEvents",
+        "true"
+      );
 
 
       return url.toString();
@@ -440,11 +467,10 @@
      * =====================================================
      */
 
-    function showError(
-      error
-    ) {
+    function showError(error) {
 
       console.error(
+        "Erro Sizebay:",
         error
       );
 
@@ -478,21 +504,43 @@
 
       try {
 
-        /*
-         * Antes de carregar a Sizebay,
-         * garantimos explicitamente o tamanho.
-         */
-        iframe.style.width =
-          "909px";
+        const device =
+          getSizebayDevice();
 
-        iframe.style.height =
-          "500px";
 
-        iframe.width =
-          "909";
+        console.log(
+          "=============================="
+        );
 
-        iframe.height =
-          "500";
+        console.log(
+          "SIZEBAY DEVICE:",
+          device
+        );
+
+        console.log(
+          "Viewport:",
+          window.innerWidth,
+          "x",
+          window.innerHeight
+        );
+
+        console.log(
+          "orientation:",
+          window.matchMedia(
+            "(orientation: landscape)"
+          ).matches
+            ? "landscape"
+            : "portrait"
+        );
+
+        console.log(
+          "User Agent:",
+          navigator.userAgent
+        );
+
+        console.log(
+          "=============================="
+        );
 
 
         const sid =
@@ -501,29 +549,14 @@
 
         const iframeUrl =
           buildIframeUrl(
-            sid
+            sid,
+            device
           );
 
 
         console.log(
           "URL Sizebay:",
           iframeUrl
-        );
-
-
-        console.log(
-          "Viewport pai:",
-          window.innerWidth,
-          "x",
-          window.innerHeight
-        );
-
-
-        console.log(
-          "Iframe configurado:",
-          iframe.width,
-          "x",
-          iframe.height
         );
 
 
@@ -536,7 +569,7 @@
 
 
             console.log(
-              "Iframe renderizado:",
+              "Iframe:",
               iframe.getBoundingClientRect().width,
               "x",
               iframe.getBoundingClientRect().height
@@ -556,9 +589,7 @@
           iframeUrl;
 
       }
-      catch (
-        error
-      ) {
+      catch (error) {
 
         showError(
           error
